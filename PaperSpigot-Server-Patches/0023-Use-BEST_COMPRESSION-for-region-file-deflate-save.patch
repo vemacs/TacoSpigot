@@ -1,0 +1,57 @@
+From 442cd03620289060b55c755a3a96fb63ee260445 Mon Sep 17 00:00:00 2001
+From: vemacs <d@nkmem.es>
+Date: Sat, 13 Aug 2016 07:52:29 -0600
+Subject: [PATCH] Use BEST_COMPRESSION for region file deflate save
+
+
+diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
+index 348706f..f1f0a90 100644
+--- a/src/main/java/net/minecraft/server/RegionFile.java
++++ b/src/main/java/net/minecraft/server/RegionFile.java
+@@ -1,15 +1,11 @@
+ package net.minecraft.server;
+ 
+ import com.google.common.collect.Lists;
+-import java.io.BufferedInputStream;
+-import java.io.ByteArrayInputStream;
+-import java.io.ByteArrayOutputStream;
+-import java.io.DataInputStream;
+-import java.io.DataOutputStream;
+-import java.io.File;
+-import java.io.IOException;
+-import java.io.RandomAccessFile;
++
++import java.io.*;
++import java.lang.reflect.Field;
+ import java.util.List;
++import java.util.zip.Deflater;
+ import java.util.zip.DeflaterOutputStream;
+ import java.util.zip.GZIPInputStream;
+ import java.util.zip.InflaterInputStream;
+@@ -172,9 +168,22 @@ public class RegionFile {
+         }
+     }
+ 
++    private Field usesDefaultDeflater;
++
+     public DataOutputStream b(int i, int j) { // PAIL: getChunkOutputStream
++        OutputStream deflaterOutput = new DeflaterOutputStream(new RegionFile.ChunkBuffer(i, j), new Deflater(Deflater.BEST_COMPRESSION));
++        try {
++            // Force end() on close
++            if (usesDefaultDeflater == null) {
++                usesDefaultDeflater = DeflaterOutputStream.class.getDeclaredField("usesDefaultDeflater");
++                usesDefaultDeflater.setAccessible(true);
++            }
++            usesDefaultDeflater.setBoolean(deflaterOutput, true);
++        } catch (NoSuchFieldException | IllegalAccessException e1) {
++            e1.printStackTrace();
++        }
+         // PAIL: isInvalidRegion
+-        return this.d(i, j) ? null : new DataOutputStream(new java.io.BufferedOutputStream(new DeflaterOutputStream(new RegionFile.ChunkBuffer(i, j)))); // Spigot - use a BufferedOutputStream to greatly improve file write performance
++        return this.d(i, j) ? null : new DataOutputStream(new java.io.BufferedOutputStream(deflaterOutput)); // Spigot - use a BufferedOutputStream to greatly improve file write performance
+     }
+ 
+     protected synchronized void a(int i, int j, byte[] abyte, int k) {
+-- 
+2.9.0.windows.1
+

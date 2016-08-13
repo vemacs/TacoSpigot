@@ -1,4 +1,4 @@
-From 33b2c3f4a72d2ca7155c572ab1061d9173289236 Mon Sep 17 00:00:00 2001
+From 97143e0c9a63d86e78ea6b3e8b626f02993d46f4 Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@outlook.com>
 Date: Thu, 3 Mar 2016 13:20:33 -0700
 Subject: [PATCH] Use ASM for event executors.
@@ -355,3 +355,4 @@ index b057b05..f2a6d0d 100644
              } else {
 -- 
 2.9.0.windows.1
+
